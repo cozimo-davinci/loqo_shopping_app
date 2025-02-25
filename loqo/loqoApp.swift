@@ -11,7 +11,16 @@ import SwiftUI
 struct loqoApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack {
+                if isLoggedIn {
+                    HomePageView()
+                } else {
+                    LandingView()  // This is your landing screen
+                }
+            }
+            .id(isLoggedIn)  // Forces a rebuild of the NavigationStack when isLoggedIn changes.
+
         }
+
     }
 }
