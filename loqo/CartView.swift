@@ -1,15 +1,19 @@
-//
-//  CartView.swift
-//  loqo
-//
-//  Created by Teimur Terchyyev on 2025-02-25.
-//
-
 import SwiftUI
 
 struct CartView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Text("Your Shopping Cart")
+                .font(.largeTitle)
+                .padding()
+
+            // You can list items in the cart here
+            Text("No items in cart yet.") // You can replace this with the cart items if needed
+                .font(.headline)
+                .padding()
+
+            Spacer()
+        }
     }
 }
 
