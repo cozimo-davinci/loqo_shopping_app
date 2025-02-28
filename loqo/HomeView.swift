@@ -1,151 +1,161 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var products: [Product] = [
-        Product(id: 1, name: "Jacket", price: "$82", imageName: "hm1"),
-        Product(id: 2, name: "Pants", price: "$70", imageName: "hm2"),
-        Product(id: 3, name: "Tshirt", price: "$52", imageName: "hm3"),
-        Product(id: 4, name: "Jacket", price: "$129", imageName: "hm4")
+    @State private var products: [ProductList] = [
+        ProductList(id: 1, title: "Pants", price: 82, description: "Stylish Pants", category: "Apparel", image: "hm1"),
+        ProductList(id: 2, title: "Dress", price: 70, description: "Brown Dress", category: "Apparel", image: "hm2"),
+        ProductList(id: 3, title: "Shirt", price: 129, description: "Black Shirt", category: "Apparel", image: "hm3"),
+        ProductList(id: 4, title: "T-shirt", price: 62, description: "T-shirt", category: "Footwear", image: "hm4")
     ]
+    
     @State private var selectedTab = 0
-    let tabs = ["house", "magnifyingglass", "heart", "bell", "person"]
-    @State private var favorites: Set<Int> = [] // To track favorite products
-    @State private var shoppingList: Set<Int> = [] // To track products added to shopping list
+    @State private var searchText = "" // For storing the search query
+    @State private var favorites: Set<Int> = []
+    @State private var shoppingList: Set<Int> = []
+
+    // Filter products based on searchText
+    var filteredProducts: [ProductList] {
+        if searchText.isEmpty {
+            return products
+        } else {
+            return products.filter { $0.title.lowercased().contains(searchText.lowercased()) }
+        }
+    }
+    
+    // Define the resetCart closure
+    private func resetCart() {
+        shoppingList.removeAll()  // Clear shopping list
+        for index in products.indices {
+            products[index].quantity = 1  // Reset product quantities (or to the default value you desire)
+        }
+    }
 
     var body: some View {
-        NavigationView {
-            VStack {
-                // **Header with Logo in Top Right**
-                HStack {
-                    Spacer()
-                    NavigationLink(destination: CartView()) {
-                        Image(systemName: "cart")
-                            .font(.title)
-                            .foregroundColor(.black)
+        TabView(selection: $selectedTab) {
+            // Home Content
+            NavigationStack {
+                VStack {
+                    // **Search Bar**
+                    HStack {
+                        TextField("Search for products...", text: $searchText)
+                            .padding(10)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
                     }
-                    Image("loqo") // Ensure "loqo" exists in Assets.xcassets
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 100)
+
+                    // **Header with Centered Logo**
+                    HStack {
+                        Spacer()
+                        Image("loqo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 75, height: 75)
+                            .padding(.leading, 40) // Pushes the image more toward center
+                        Spacer()
+                        NavigationLink(destination: CartView(
+                            shoppingList: $shoppingList,
+                            products: $products,
+                            resetCart: resetCart // Pass the resetCart closure here
+                        )) {
+                            Image(systemName: "cart")
+                                .font(.title)
+                                .foregroundColor(.black)
+                        }
                         .padding(.trailing, 16)
-                }
-                .padding()
+                    }
+                    .padding(.vertical, 10)
 
-                // **Title**
-                Text("Suggested for you")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, 16)
+                    // **Product Grid**
+                    Text("Suggested for you")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 16)
 
-                // **Product List with Flexible Grid Layout**
-                ScrollView {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible()), // First column
-                        GridItem(.flexible())  // Second column
-                    ], spacing: 16) {
-                        ForEach(products) { product in
-                            VStack {
-                                // **Image Covering Full Grid Space with Height Coverage**
-                                Image(product.imageName)
-                                    .resizable()
-                                    .scaledToFill() // Ensures the image fills the container
-                                    .frame(maxHeight: 600) // Ensure max height is covered
-                                    .clipped() // Clips the image if it exceeds the bounds
-                                    .cornerRadius(10)
-                                    .background(Color.white)
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                            ForEach(filteredProducts) { product in
+                                VStack {
+                                    Image(product.image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(maxHeight: 600)
+                                        .clipped()
+                                        .cornerRadius(10)
+                                        .background(Color.white)
 
-                                // **Product Name and Price with Increased Size**
-                                Text(product.name)
-                                    .font(.title3) // Increased font size for name
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.black)
+                                    Text(product.title)
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.black)
+                                        .padding(.top, 8)
+
+                                    Text("$\(product.price, specifier: "%.2f")")
+                                        .font(.headline)
+                                        .foregroundColor(.gray)
+                                        .padding(.top, 2)
+
+                                    // **Add to Cart Button**
+                                    HStack {
+                                        Button(action: {
+                                            if shoppingList.contains(product.id) {
+                                                shoppingList.remove(product.id)
+                                            } else {
+                                                shoppingList.insert(product.id)
+                                            }
+                                        }) {
+                                            Image(systemName: shoppingList.contains(product.id) ? "cart.fill" : "cart")
+                                                .font(.title2)
+                                                .foregroundColor(.blue)
+                                                .padding(.trailing, 16)
+                                        }
+
+                                        Button(action: {
+                                            if favorites.contains(product.id) {
+                                                favorites.remove(product.id)
+                                            } else {
+                                                favorites.insert(product.id)
+                                            }
+                                        }) {
+                                            Image(systemName: favorites.contains(product.id) ? "heart.fill" : "heart")
+                                                .font(.title2)
+                                                .foregroundColor(.red)
+                                        }
+                                    }
                                     .padding(.top, 8)
-
-                                Text(product.price)
-                                    .font(.headline) // Increased font size for price
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 2)
-
-                                // **Add to Cart and Favorite Buttons**
-                                HStack {
-                                    // Add to shopping list button (Cart)
-                                    Button(action: {
-                                        if shoppingList.contains(product.id) {
-                                            shoppingList.remove(product.id)
-                                        } else {
-                                            shoppingList.insert(product.id)
-                                        }
-                                    }) {
-                                        Image(systemName: shoppingList.contains(product.id) ? "cart.fill" : "cart")
-                                            .font(.title2)
-                                            .foregroundColor(.blue)
-                                            .padding(.trailing, 16)
-                                    }
-
-                                    // Add to favorites button (Heart)
-                                    Button(action: {
-                                        if favorites.contains(product.id) {
-                                            favorites.remove(product.id)
-                                        } else {
-                                            favorites.insert(product.id)
-                                        }
-                                    }) {
-                                        Image(systemName: favorites.contains(product.id) ? "heart.fill" : "heart")
-                                            .font(.title2)
-                                            .foregroundColor(.red)
-                                    }
                                 }
-                                .padding(.top, 8) // Spacing between buttons and price
+                                .frame(maxWidth: .infinity)
                             }
-                            .frame(maxWidth: .infinity) // Ensures each product takes full available width
                         }
-                    }
-                    .padding(.horizontal, 16) // Adds spacing on the sides
-                    .padding(.vertical, 10)   // Adds vertical spacing
-                }
-
-                // **Bottom Tab Bar - Improved Layout**
-                HStack {
-                    ForEach(0..<tabs.count, id: \.self) { index in
-                        Button(action: { selectedTab = index }) {
-                            VStack(spacing: 4) {
-                                Image(systemName: tabs[index])
-                                    .font(.title2)
-                                    .foregroundColor(selectedTab == index ? .blue : .gray)
-                                Text(tabTitle(index))
-                                    .font(.caption)
-                                    .foregroundColor(selectedTab == index ? .blue : .gray)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
                     }
                 }
-                .frame(height: 70) // Slightly taller for a more balanced look
-                .background(Color.white.shadow(radius: 2)) // Light gray background for a modern look
-                .cornerRadius(15)
-                .shadow(radius: 2)
             }
-            .background(Color.white.edgesIgnoringSafeArea(.all))
+            .tabItem {
+                Image(systemName: "house")
+                Text("Home")
+            }
+            .tag(0)
+            
+            // **Favorites View** - Now passing the favorites as a binding
+            FavoritesView(favorites: $favorites, products: products, shoppingList: $shoppingList)
+                .tabItem {
+                    Image(systemName: "heart")
+                    Text("Favorites")
+                }
+                .tag(2)
+            
+            // **Profile Tab**
+            ProfileView()
+            .tabItem {
+                Image(systemName: "person")
+                Text("Profile")
+            }
+            .tag(3)
         }
+        .accentColor(.blue) // Highlight selected tab in blue
     }
-
-    private func tabTitle(_ index: Int) -> String {
-        switch index {
-        case 0: return "Home"
-        case 1: return "Search"
-        case 2: return "Favorites"
-        case 3: return "Notifications"
-        case 4: return "Profile"
-        default: return ""
-        }
-    }
-}
-
-// **Product Model**
-struct Product: Identifiable {
-    let id: Int
-    let name: String
-    let price: String
-    let imageName: String
 }

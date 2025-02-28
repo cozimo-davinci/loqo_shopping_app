@@ -14,5 +14,5 @@ struct ProductList: Identifiable, Codable {
     let description: String
     let category: String
     let image: String
-    
+    var quantity: Int = 1
 }
