@@ -1,35 +1,30 @@
-//
-//  ProductCard.swift
-//  loqo
-//
-//  Created by Teimur Terchyyev on 2025-02-25.
-//
-
 import SwiftUI
 
 struct ProductCard: View {
-    let product: ProductList
-
+    var product: ProductList
+    
     var body: some View {
         VStack {
             AsyncImage(url: URL(string: product.image)) { image in
                 image
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 120)
-                    .cornerRadius(10)
+                    .frame(height: 200)
             } placeholder: {
-                ProgressView()
+                ProgressView() // Show a loading spinner while the image is loading
             }
+            
             Text(product.title)
                 .font(.headline)
                 .lineLimit(2)
-                .multilineTextAlignment(.center)
-            Text(String(format: "$%.2f", product.price))
+            
+            Text("$\(product.price, specifier: "%.2f")")
                 .font(.subheadline)
                 .foregroundColor(.gray)
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white).shadow(radius: 2))
+        .background(Color.white)
+        .cornerRadius(8)
+        .shadow(radius: 4)
     }
 }
