@@ -8,8 +8,19 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+
     var body: some View {
-      HomeView()
+        NavigationView {
+            if authViewModel.user != nil {
+                HomeView()  // Your main app page
+            } else {
+                LoginView()
+            }
+        }
+        .onAppear{
+            
+        }
     }
 }
 
