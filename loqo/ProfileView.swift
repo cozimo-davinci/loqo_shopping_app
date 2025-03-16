@@ -1,15 +1,13 @@
 import SwiftUI
-import PhotosUI // ✅ Built-in SwiftUI framework for picking images
+import PhotosUI
 import UIKit
-struct ProfileView: View {
-    @State private var name: String = "John Doe"
-    @State private var phoneNumber: String = "+1 234 567 890"
-    @State private var email: String = "johndoe@example.com"
 
-    @State private var profileImage: Image? = Image(systemName: "person.crop.circle.fill") // Default profile icon
+struct ProfileView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var selectedImageData: Data?
     @State private var showSaveAlert = false
+    @State private var showLogoutAlert = false  // ✅ State for logout confirmation
 
     var body: some View {
         VStack(spacing: 20) {
@@ -24,7 +22,7 @@ struct ProfileView: View {
                         .overlay(Circle().stroke(Color.blue, lineWidth: 3))
                         .shadow(radius: 5)
                 } else {
-                    profileImage?
+                    Image(systemName: "person.crop.circle.fill") // Default profile icon
                         .resizable()
                         .scaledToFill()
                         .frame(width: 120, height: 120)
@@ -41,14 +39,31 @@ struct ProfileView: View {
                 }
             }
 
-            // Name TextField
+            // First Name TextField
             VStack(alignment: .leading) {
-                Text("Name")
+                Text("First Name")
                     .font(.headline)
-                TextField("Enter your name", text: $name)
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                TextField("Enter your first name", text: Binding(
+                    get: { authViewModel.userProfile?.firstName ?? "" },
+                    set: { authViewModel.userProfile?.firstName = $0 }
+                ))
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+            }
+            .padding(.horizontal, 16)
+
+            // Last Name TextField
+            VStack(alignment: .leading) {
+                Text("Last Name")
+                    .font(.headline)
+                TextField("Enter your last name", text: Binding(
+                    get: { authViewModel.userProfile?.lastName ?? "" },
+                    set: { authViewModel.userProfile?.lastName = $0 }
+                ))
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
             }
             .padding(.horizontal, 16)
 
@@ -56,10 +71,13 @@ struct ProfileView: View {
             VStack(alignment: .leading) {
                 Text("Phone Number")
                     .font(.headline)
-                TextField("Enter your phone number", text: $phoneNumber)
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                TextField("Enter your phone number", text: Binding(
+                    get: { authViewModel.userProfile?.phoneNumber ?? "" },
+                    set: { authViewModel.userProfile?.phoneNumber = $0 }
+                ))
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
             }
             .padding(.horizontal, 16)
 
@@ -67,16 +85,24 @@ struct ProfileView: View {
             VStack(alignment: .leading) {
                 Text("Email")
                     .font(.headline)
-                TextField("Enter your email", text: $email)
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                TextField("Enter your email", text: Binding(
+                    get: { authViewModel.userProfile?.email ?? "" },
+                    set: { authViewModel.userProfile?.email = $0 }
+                ))
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
             }
             .padding(.horizontal, 16)
 
-            // Save Changes Button
             Button(action: {
-                showSaveAlert = true
+                authViewModel.updateUserProfile { success in
+                    if success {
+                        showSaveAlert = true
+                    } else {
+                        // Handle failure (e.g., show an error message)
+                    }
+                }
             }) {
                 Text("Save Changes")
                     .frame(maxWidth: .infinity)
@@ -90,12 +116,41 @@ struct ProfileView: View {
                 Alert(title: Text("Success"), message: Text("Your profile has been updated!"), dismissButton: .default(Text("OK")))
             }
 
+
+            // Logout Button with Confirmation Alert
+            Button(action: {
+                showLogoutAlert = true  // ✅ Show confirmation alert
+            }) {
+                Text("Log Out")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                    .padding(.horizontal, 16)
+            }
+            .alert(isPresented: $showLogoutAlert) {
+                Alert(
+                    title: Text("Confirm Logout"),
+                    message: Text("Are you sure you want to log out?"),
+                    primaryButton: .destructive(Text("Log Out")) {
+                        authViewModel.signOut()
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
+
             Spacer()
         }
         .navigationTitle("Profile")
+        .onAppear {
+            if let user = authViewModel.user {
+                authViewModel.fetchUserProfile(uid: user.uid)
+            }
+        }
     }
 
-    // Convert Data to SwiftUI Image (Alternative to UIImage)
+    // Convert Data to SwiftUI Image
     func ImageFromData(_ data: Data) -> Image? {
         if let uiImage = UIImage(data: data) {
             return Image(uiImage: uiImage)
@@ -107,6 +162,6 @@ struct ProfileView: View {
 // MARK: - Preview
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileView()
+        ProfileView().environmentObject(AuthViewModel())
     }
 }
