@@ -13,6 +13,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct loqoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject private var dataController = DataController()
+
 
     // Create the AuthViewModel instance here
     @StateObject private var authViewModel = AuthViewModel()
@@ -21,7 +23,7 @@ struct loqoApp: App {
         WindowGroup {
             // Inject AuthViewModel into the environment
             ContentView()
-                .environmentObject(authViewModel)  // ✅ Inject the AuthViewModel here
+                .environmentObject(authViewModel)
         }
     }
 }
