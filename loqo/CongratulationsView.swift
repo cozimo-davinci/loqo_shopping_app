@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CongratulationsView: View {
     var resetCart: () -> Void
-
+    @Binding var path: NavigationPath
     @Environment(\.presentationMode) var presentationMode // Use this for dismissing the view
 
     var body: some View {
@@ -24,7 +24,7 @@ struct CongratulationsView: View {
 
             Button(action: {
                 resetCart()
-                presentationMode.wrappedValue.dismiss() // ✅ Go back in NavigationStack
+                presentationMode.wrappedValue.dismiss()  // ✅ Go back in NavigationStack
             }) {
                 Text("Continue Shopping")
                     .font(.headline)
@@ -45,6 +45,6 @@ struct CongratulationsView: View {
 // MARK: - Preview
 struct CongratulationsView_Previews: PreviewProvider {
     static var previews: some View {
-        CongratulationsView(resetCart: {})
+        CongratulationsView(resetCart: {}, path: .constant(NavigationPath()))
     }
 }

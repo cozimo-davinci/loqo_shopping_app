@@ -1,13 +1,19 @@
 import SwiftUI
 
 struct FavoritesView: View {
-    @Binding var favorites: Set<Int>  // Use @Binding to allow mutating the favorites set
-    var products: [ProductList]
-    @Binding var shoppingList: Set<Int>  // Bind the shopping list so items can be added to it
+    @Binding var favorites: Set<Int64>  // Use @Binding to allow mutating the favorites set
+    let products: FetchedResults<Product>
+    @Binding var shoppingList: Set<Int64>  // Bind the shopping list so items can be added to it
     
     @State private var showingAlert = false
-    @State private var selectedProduct: ProductList? = nil
+    @State private var selectedProduct: Product? = nil
     @State private var navigateToCart = false  // State to control navigation
+    @Binding var path: NavigationPath
+
+    // Filter the products based on the favorites set
+    var favoriteProducts: [Product] {
+        products.filter { favorites.contains($0.id) } // Assuming your Product has an 'id' of type Int64
+    }
 
     var body: some View {
         NavigationStack {
@@ -27,20 +33,31 @@ struct FavoritesView: View {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             ForEach(favoriteProducts) { product in
                                 VStack {
-                                    Image(product.image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(maxHeight: 400)
-                                        .clipped()
-                                        .cornerRadius(10)
-                                        .background(Color.white)
-
-                                    Text(product.title)
-                                        .font(.title3)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.black)
-                                        .padding(.top, 8)
-
+                                    if let imageName = product.image {
+                                            Image(imageName)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(maxHeight: 400)
+                                                .clipped()
+                                                .cornerRadius(10)
+                                                .background(Color.white)
+                                        } else {
+                                            Image(systemName: "photo") // Placeholder
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(maxHeight: 400)
+                                                .clipped()
+                                                .cornerRadius(10)
+                                                .background(Color.white)
+                                                .foregroundColor(.gray)
+                                        }
+                                    if let title = product.title{
+                                        Text(title)
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.black)
+                                            .padding(.top, 8)
+                                    }
                                     Text("$\(product.price, specifier: "%.2f")")
                                         .font(.headline)
                                         .foregroundColor(.gray)
@@ -97,9 +114,13 @@ struct FavoritesView: View {
                     secondaryButton: .cancel()
                 )
             }
-            // Programmatic navigation using navigationDestination
             .navigationDestination(isPresented: $navigateToCart) {
-                CartView(shoppingList: $shoppingList, products: .constant(products), resetCart: {})
+                CartView(
+                    shoppingList: $shoppingList,
+                    products: products,
+                    path: $path,
+                    resetCart: {}
+                )
             }
         }
     }

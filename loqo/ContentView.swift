@@ -9,13 +9,14 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Binding var path: NavigationPath
 
     var body: some View {
         NavigationView {
             if authViewModel.user == nil {
-                LoginView()
+                LoginView(path: $path)
             } else {
-                HomeView()
+                HomeView(path: $path)
             }
         }
         .onAppear{
@@ -25,7 +26,8 @@ struct ContentView: View {
 }
 
 struct ContentView_Previews: PreviewProvider {
+
     static var previews: some View {
-        ContentView()
+        ContentView(path: .constant(NavigationPath()))
     }
 }

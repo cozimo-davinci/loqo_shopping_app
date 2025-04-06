@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct CartView: View {
-    @Binding var shoppingList: Set<Int>
-    @Binding var products: [ProductList]
+    @Environment(\.managedObjectContext) private var viewContext
+    @Binding var shoppingList: Set<Int64>
+    var products: FetchedResults<Product>
+    @Binding var path: NavigationPath
 
     let taxRate = 0.13  // 13% tax rate
 
-    var cartItems: [ProductList] {
+    var cartItems: [Product] {
         products.filter { shoppingList.contains($0.id) }
     }
 
@@ -23,7 +25,7 @@ struct CartView: View {
     }
 
     @State private var showingAlert = false
-    @State private var itemToRemove: ProductList? = nil
+    @State private var itemToRemove: Product? = nil
 
     var resetCart: () -> Void  // Reset the cart when proceeding to checkout
     
@@ -45,15 +47,27 @@ struct CartView: View {
                 List {
                     ForEach(cartItems) { product in
                         HStack(spacing: 15) {
-                            Image(product.image)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 80, height: 80)
-                                .cornerRadius(10)
+                            if let imageName = product.image { // Safely unwrap the optional image name
+                                Image(imageName)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .cornerRadius(10)
+                            } else {
+                                // You can provide a placeholder image or handle the case where the image is nil
+                                Image(systemName: "photo") // Example placeholder system image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .foregroundColor(.gray)
+                                    .cornerRadius(10)
+                            }
 
                             VStack(alignment: .leading, spacing: 5) {
-                                Text(product.title)
-                                    .font(.headline)
+                                if let title = product.title {
+                                    Text(title)
+                                        .font(.headline)
+                                }
 
                                 Text("$\(product.price, specifier: "%.2f") each")
                                     .font(.subheadline)
@@ -148,8 +162,8 @@ struct CartView: View {
             
             // Checkout Button
             if !cartItems.isEmpty {
-                NavigationLink(destination: CongratulationsView(resetCart: resetCart)) {
-                    Text("Proceed to Checkout")
+                NavigationLink(destination: PaymentView(totalPrice: totalPrice, resetCart: resetCart, path: $path)) {
+                    Text("Proceed to Payment")
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding()

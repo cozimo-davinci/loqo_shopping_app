@@ -10,6 +10,7 @@ struct SignUpView: View {
     @State private var showVerificationAlert = false
     @State private var navigateToLogin = false
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Binding var path: NavigationPath
 
     var body: some View {
         NavigationStack {
@@ -69,13 +70,13 @@ struct SignUpView: View {
                 }
 
                 NavigationLink(
-                    destination: LoginView(),
+                    destination: LoginView(path: $path),
                     isActive: $navigateToLogin,
                     label: { EmptyView() }
                 )
                 .hidden()
                 
-                NavigationLink("Already have an account? Login", destination: LoginView())
+                NavigationLink("Already have an account? Login", destination: LoginView(path: $path))
                     .padding()
             }
             .padding()

@@ -6,6 +6,7 @@ struct LoginView: View {
     @State private var errorMessage: String?
     @State private var navigateToHome = false
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Binding var path: NavigationPath
 
     var body: some View {
         NavigationStack {
@@ -44,13 +45,13 @@ struct LoginView: View {
                 .padding()
 
                 NavigationLink(
-                    destination: HomeView(),
+                    destination: HomeView(path: $path),
                     isActive: $navigateToHome,
                     label: { EmptyView() }
                 )
                 .hidden() // Hide the NavigationLink itself
 
-                NavigationLink("Don't have an account? Sign Up", destination: SignUpView())
+                NavigationLink("Don't have an account? Sign Up", destination: SignUpView(path: $path))
                     .padding()
             }
             .padding()

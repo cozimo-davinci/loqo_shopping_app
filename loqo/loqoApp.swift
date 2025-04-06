@@ -14,16 +14,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct loqoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var dataController = DataController()
-
-
-    // Create the AuthViewModel instance here
     @StateObject private var authViewModel = AuthViewModel()
 
     var body: some Scene {
         WindowGroup {
-            // Inject AuthViewModel into the environment
-            ContentView()
+            ContentView(path: .constant(NavigationPath()))
+                .environment(\.managedObjectContext, dataController.persistentContainer.viewContext)
                 .environmentObject(authViewModel)
+                .environmentObject(dataController) // Optional but useful if you need the controller itself
         }
     }
 }
